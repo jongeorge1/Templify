@@ -3,6 +3,7 @@ namespace Endjin.Templify.MSBuild
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
+    using System.Linq;
 
     using Endjin.Templify.Domain.Contracts.Tasks;
     using Endjin.Templify.Domain.Domain.Packages;
@@ -22,6 +23,12 @@ namespace Endjin.Templify.MSBuild
             this.PackageCreatorTasks.Progress += this.OnPackageCreatorTasksProgress;
         }
 
+        public CreatePackage(IPackageCreatorTasks packageCreatorTasks)
+        {
+            this.PackageCreatorTasks = packageCreatorTasks;
+            this.PackageCreatorTasks.Progress += this.OnPackageCreatorTasksProgress;
+        }
+        
         protected string Author { get; set; }
 
         protected string Name { get; set; }
@@ -32,11 +39,7 @@ namespace Endjin.Templify.MSBuild
 
         protected string Path { get; set; }
 
-        protected string RawMode { get; set; }
-
-        protected string[] RawTokens { get; set; }
-
-        protected Dictionary<string, string> Tokens { get; set; }
+        protected ITaskItem[] Tokens { get; set; }
 
         protected string Version { get; set; }
 
@@ -45,10 +48,9 @@ namespace Endjin.Templify.MSBuild
 
         public override bool Execute()
         {
-            var options = this.BuildOptions();
-
             try
             {
+                var options = this.BuildOptions();
                 this.PackageCreatorTasks.CreatePackage(options);
             }
             catch (Exception exception)
@@ -70,11 +72,33 @@ namespace Endjin.Templify.MSBuild
                     PackageName = this.PackageName,
                     PackageRepositoryPath = this.PackageRepositoryPath,
                     Path = this.Path,
-                    Tokens = this.Tokens,
-                    RawMode = this.RawMode,
-                    RawTokens = this.RawTokens,
+                    Tokens = BuildTokenDictionaryFrom(this.Tokens),
                     Version = this.Version,
                 };
+        }
+
+        private static Dictionary<string, string> BuildTokenDictionaryFrom(IEnumerable<ITaskItem> taskItems)
+        {
+            return taskItems.Select(BuildTokenFrom).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        private static KeyValuePair<string, string> BuildTokenFrom(ITaskItem taskItem)
+        {
+            var itemSpec = taskItem.ItemSpec;
+            var key = taskItem.GetMetadata("value");
+            var val = taskItem.GetMetadata("token");
+
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new Exception(string.Format("Token {0} has no value element.", itemSpec));
+            }
+
+            if (string.IsNullOrEmpty(val))
+            {
+                throw new Exception(string.Format("Token {0} has no token element.", itemSpec));
+            }
+
+            return new KeyValuePair<string, string>(key, val);
         }
 
         private void OnPackageCreatorTasksProgress(object sender, PackageProgressEventArgs e)
