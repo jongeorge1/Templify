@@ -1,6 +1,7 @@
 namespace Endjin.Templify.MSBuild.Mappers
 {
     using System.Collections.Generic;
+    using System.ComponentModel.Composition;
     using System.Linq;
 
     using Endjin.Templify.Domain.Infrastructure;
@@ -8,6 +9,7 @@ namespace Endjin.Templify.MSBuild.Mappers
 
     using Microsoft.Build.Framework;
 
+    [Export(typeof(ICommandOptionsMapper))]
     public class CommandOptionsMapper : ICommandOptionsMapper
     {
         public CommandOptions MapFrom(CreatePackage createPackage)
