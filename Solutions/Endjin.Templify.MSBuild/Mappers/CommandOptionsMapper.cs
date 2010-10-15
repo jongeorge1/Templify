@@ -19,7 +19,6 @@ namespace Endjin.Templify.MSBuild.Mappers
                 Author = createPackage.Author,
                 Mode = Mode.Create,
                 Name = createPackage.Name,
-                PackageName = createPackage.PackageName,
                 PackageRepositoryPath = createPackage.PackageRepositoryPath,
                 Path = createPackage.Path,
                 RawTokens = BuildRawTokenDictionaryFrom(createPackage.Tokens),

@@ -34,8 +34,6 @@ namespace Endjin.Templify.MSBuild
 
         public string Name { get; set; }
 
-        public string PackageName { get; set; }
-
         public string PackageRepositoryPath { get; set; }
 
         public string Path { get; set; }
