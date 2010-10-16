@@ -58,7 +58,7 @@ namespace Endjin.Templify.Specifications.MSBuild
 
         Because of = () => result = subject.Execute();
 
-        It should_ask_the_command_options_mapper_to_map_itself = () => the_command_options_mapper.AssertWasCalled(m => m.MapFrom(subject));
+        It should_ask_the_command_options_mapper_to_map_from_itself = () => the_command_options_mapper.AssertWasCalled(m => m.MapFrom(subject));
 
         It should_ask_the_package_creator_tasks_to_create_the_package = () => the_package_creator_tasks.AssertWasCalled(t => t.CreatePackage(the_command_options));
 
