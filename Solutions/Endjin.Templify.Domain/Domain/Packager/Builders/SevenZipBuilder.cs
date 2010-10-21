@@ -7,6 +7,8 @@
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Security;
+    using System.Security.Permissions;
 
     using Endjin.Templify.Domain.Contracts.Packager.Builders;
     using Endjin.Templify.Domain.Contracts.Packager.Notifiers;
@@ -22,6 +24,8 @@
     {
         private readonly IProgressNotifier progressNotifier;
 
+        private DirectoryInfo customTempFolder;
+
         [ImportingConstructor]
         public SevenZipBuilder(IProgressNotifier progressNotifier)
         {
@@ -35,14 +39,23 @@
 
             var file = new FileInfo(Assembly.GetExecutingAssembly().Location);
 
+            // Create a temp folder in the package repository folder - we can delete it later.
+            this.customTempFolder = new DirectoryInfo(Path.Combine(packageRepositoryPath, "SevenZipTempFolder"));
+            if (!this.customTempFolder.Exists)
+            {
+                this.customTempFolder.Create();
+            }
+                
             SevenZipCompressor.SetLibraryPath(Path.Combine(file.DirectoryName, "7z.dll"));
-            
+
             var sevenZipCompressor = new SevenZipCompressor
                 {
-                    ArchiveFormat = OutArchiveFormat.SevenZip, 
-                    CompressionLevel = CompressionLevel.Ultra
+                    ArchiveFormat = OutArchiveFormat.SevenZip,
+                    CompressionLevel = CompressionLevel.Ultra,
+                    TempFolderPath = this.customTempFolder.FullName,
                 };
-
+            
+            Console.WriteLine("SevenZipLib temp folder path: " + sevenZipCompressor.TempFolderPath);
             sevenZipCompressor.Compressing += this.Compressing;
             sevenZipCompressor.CompressionFinished += this.CompressingFinished;
 
@@ -51,6 +64,11 @@
 
         private void CompressingFinished(object sender, EventArgs e)
         {
+            if (this.customTempFolder != null)
+            {
+                this.customTempFolder.Delete(true);
+            }
+
             this.progressNotifier.UpdateProgress(ProgressStage.CreatingArchive, 0, 0);
         }
 
