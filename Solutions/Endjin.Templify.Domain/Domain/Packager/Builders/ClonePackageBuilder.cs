@@ -28,10 +28,10 @@
             this.progressNotifier = progressNotifier;
         }
 
-        public Package Build(Package package)
+        public Package Build(Package package, string packageRepositoryWorkingPath)
         {
-            package.ClonedPath = Path.Combine(Path.Combine(FilePaths.TemporaryPackageRepository, package.Manifest.Id.ToString()), "Cloned");
-            package.TemplatePath = Path.Combine(Path.Combine(FilePaths.TemporaryPackageRepository, package.Manifest.Id.ToString()), "Template");
+            package.ClonedPath = Path.Combine(Path.Combine(packageRepositoryWorkingPath, package.Manifest.Id.ToString()), "Cloned");
+            package.TemplatePath = Path.Combine(Path.Combine(packageRepositoryWorkingPath, package.Manifest.Id.ToString()), "Template");
 
             var manifestFilePath = this.PersistManifestFileAndReturnLocation(package);
 

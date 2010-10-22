@@ -86,11 +86,11 @@ namespace Endjin.Templify.Domain.Tasks
 
             var package = this.packageBuilder.Build(this.commandOptions.Path, packageMetaData);
 
-            var clonedPackage = this.clonePackageBuilder.Build(package);
+            var clonedPackage = this.clonePackageBuilder.Build(package, this.commandOptions.PackageRepositoryWorkingPath);
             var tokenisedPackage = this.packageTokeniser.Tokenise(clonedPackage, this.commandOptions.Tokens);
 
-            this.archiveBuilder.Build(tokenisedPackage, this.commandOptions.Path, this.commandOptions.PackageRepositoryPath);
-            this.cleanUpProcessor.Process(FilePaths.TemporaryPackageRepository);
+            this.archiveBuilder.Build(tokenisedPackage, this.commandOptions.Path, this.commandOptions.PackageRepositoryPath, this.commandOptions.PackageRepositoryWorkingPath);
+            this.cleanUpProcessor.Process(this.commandOptions.PackageRepositoryWorkingPath);
         }
 
         private void OnProgressUpdate(object sender, PackageProgressEventArgs e)

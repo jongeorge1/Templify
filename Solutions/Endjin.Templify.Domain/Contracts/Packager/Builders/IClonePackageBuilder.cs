@@ -4,6 +4,6 @@ namespace Endjin.Templify.Domain.Contracts.Packager.Builders
 
     public interface IClonePackageBuilder
     {
-        Package Build(Package package);
+        Package Build(Package package, string packageRepositoryWorkingPath);
     }
 }

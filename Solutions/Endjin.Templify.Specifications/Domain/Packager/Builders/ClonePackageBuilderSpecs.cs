@@ -71,9 +71,11 @@ namespace Endjin.Templify.Specifications.Domain.Packager.Builders
     {
         static Package result;
 
+        const string working_path = "workingPath";
+
         Establish context = () => clone_file_processor.Stub(c => c.Process("fromFilePath", "toFilePath")).IgnoreArguments();
 
-        Because of = () => result = subject.Build(package_to_clone);
+        Because of = () => result = subject.Build(package_to_clone, working_path);
 
         It should_ask_the_clone_file_processor_to_clone_the_file = () =>
             clone_file_processor.AssertWasCalled(c => c.Process("fromFilePath", "toFilePath"), r => r.IgnoreArguments());
@@ -88,7 +90,7 @@ namespace Endjin.Templify.Specifications.Domain.Packager.Builders
             {
                 foreach (var file in result.Manifest.Files)
                 {
-                    file.File.ShouldStartWith(FilePaths.TemporaryPackageRepository);
+                    file.File.ShouldStartWith(working_path);
                 }
             };
     }

@@ -22,6 +22,7 @@
             this.Mode = Mode.NotSet;
             this.Tokens = new Dictionary<string, string>();
             this.PackageRepositoryPath = FilePaths.PackageRepository;
+            this.PackageRepositoryWorkingPath = FilePaths.TemporaryPackageRepository;
         }
 
         [Option("a", "author",
@@ -46,6 +47,10 @@
         [Option("r", "repository",
                 HelpText = @"Alternative location of the Templify repository (Default: '%AppData%\Endjin\Templify\repo').")]
         public string PackageRepositoryPath { get; set; }
+
+        [Option("w", "working",
+                HelpText = @"Alternative location of the Templify working folder (Default: '%AppData%\Endjin\Templify\tmp-repo').")]
+        public string PackageRepositoryWorkingPath { get; set; }
 
         [Option("m", "mode",
                 Required = true,

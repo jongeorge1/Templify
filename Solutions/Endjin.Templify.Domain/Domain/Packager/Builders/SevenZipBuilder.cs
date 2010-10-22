@@ -24,38 +24,28 @@
     {
         private readonly IProgressNotifier progressNotifier;
 
-        private DirectoryInfo customTempFolder;
-
         [ImportingConstructor]
         public SevenZipBuilder(IProgressNotifier progressNotifier)
         {
             this.progressNotifier = progressNotifier;
         }
 
-        public void Build(Package package, string path, string packageRepositoryPath)
+        public void Build(Package package, string path, string packageRepositoryPath, string packageRepositoryWorkingPath)
         {
             var archiveName = package.Manifest.Name.ToLowerInvariant().Replace(" ", "-") + "-v" + package.Manifest.Version;
             var archive = Path.Combine(packageRepositoryPath, archiveName) + FileTypes.Package;
 
             var file = new FileInfo(Assembly.GetExecutingAssembly().Location);
 
-            // Create a temp folder in the package repository folder - we can delete it later.
-            this.customTempFolder = new DirectoryInfo(Path.Combine(packageRepositoryPath, "SevenZipTempFolder"));
-            if (!this.customTempFolder.Exists)
-            {
-                this.customTempFolder.Create();
-            }
-                
             SevenZipCompressor.SetLibraryPath(Path.Combine(file.DirectoryName, "7z.dll"));
 
             var sevenZipCompressor = new SevenZipCompressor
                 {
                     ArchiveFormat = OutArchiveFormat.SevenZip,
                     CompressionLevel = CompressionLevel.Ultra,
-                    TempFolderPath = this.customTempFolder.FullName,
+                    TempFolderPath = packageRepositoryWorkingPath,
                 };
             
-            Console.WriteLine("SevenZipLib temp folder path: " + sevenZipCompressor.TempFolderPath);
             sevenZipCompressor.Compressing += this.Compressing;
             sevenZipCompressor.CompressionFinished += this.CompressingFinished;
 
@@ -64,11 +54,6 @@
 
         private void CompressingFinished(object sender, EventArgs e)
         {
-            if (this.customTempFolder != null)
-            {
-                this.customTempFolder.Delete(true);
-            }
-
             this.progressNotifier.UpdateProgress(ProgressStage.CreatingArchive, 0, 0);
         }
 

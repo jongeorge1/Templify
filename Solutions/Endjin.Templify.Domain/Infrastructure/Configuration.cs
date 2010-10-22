@@ -1,58 +1,61 @@
 ﻿namespace Endjin.Templify.Domain.Infrastructure
 {
-    #region Using Directives
+	#region Using Directives
 
-    using System;
-    using System.ComponentModel.Composition;
-    using System.Configuration;
+	using System;
+	using System.ComponentModel.Composition;
+	using System.Configuration;
 
-    using Endjin.Templify.Domain.Contracts.Infrastructure;
+	using Endjin.Templify.Domain.Contracts.Infrastructure;
 
-    #endregion
+	#endregion
 
-    [Export(typeof(IConfiguration))]
-    public class Configuration : IConfiguration
-    {
-        public Configuration()
-        {
-            this.PackageRepositoryPath = FilePaths.PackageRepository;
-        }
+	[Export(typeof(IConfiguration))]
+	public class Configuration : IConfiguration
+	{
+		public Configuration()
+		{
+			this.PackageRepositoryPath = FilePaths.PackageRepository;
+			this.PackageRepositoryWorkingPath = FilePaths.TemporaryPackageRepository;
+		}
 
-        public string PackageRepositoryPath { get; set; }
+		public string PackageRepositoryPath { get; set; }
 
-        public string GetFileExclusions()
-        {
-            return this.GetConfigSetting("FileExclusions");
-        }
-        
-        public string GetDirectoryExclusions()
-        {
-            return this.GetConfigSetting("DirectoryExclusions");
-        }
+		public string PackageRepositoryWorkingPath { get; set; }
 
-        public void SaveDirectoryExclusions(string directoryExclusions)
-        {
-            this.SaveConfigSetting("DirectoryExclusions", directoryExclusions);
-        }
+		public string GetFileExclusions()
+		{
+			return this.GetConfigSetting("FileExclusions");
+		}
+		
+		public string GetDirectoryExclusions()
+		{
+			return this.GetConfigSetting("DirectoryExclusions");
+		}
 
-        public void SaveFileExclusions(string fileExclusions)
-        {
-            this.SaveConfigSetting("FileExclusions", fileExclusions);
-        }
+		public void SaveDirectoryExclusions(string directoryExclusions)
+		{
+			this.SaveConfigSetting("DirectoryExclusions", directoryExclusions);
+		}
 
-        private string GetConfigSetting(string settingName)
-        {
-            return ConfigurationManager.AppSettings[settingName] ?? string.Empty;
-        }
+		public void SaveFileExclusions(string fileExclusions)
+		{
+			this.SaveConfigSetting("FileExclusions", fileExclusions);
+		}
 
-        private void SaveConfigSetting(string settingName, string value)
-        {
-            var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            
-            configuration.AppSettings.Settings[settingName].Value = value;
-            configuration.Save(ConfigurationSaveMode.Modified);
+		private string GetConfigSetting(string settingName)
+		{
+			return ConfigurationManager.AppSettings[settingName] ?? string.Empty;
+		}
 
-            ConfigurationManager.RefreshSection("appSettings");
-        }
-    }
+		private void SaveConfigSetting(string settingName, string value)
+		{
+			var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+			
+			configuration.AppSettings.Settings[settingName].Value = value;
+			configuration.Save(ConfigurationSaveMode.Modified);
+
+			ConfigurationManager.RefreshSection("appSettings");
+		}
+	}
 }
