@@ -2,6 +2,7 @@ namespace Endjin.Templify.MSBuild.Mappers
 {
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
+    using System.IO;
     using System.Linq;
 
     using Endjin.Templify.Domain.Infrastructure;
@@ -19,9 +20,9 @@ namespace Endjin.Templify.MSBuild.Mappers
                 Author = createPackage.Author,
                 Mode = Mode.Create,
                 Name = createPackage.Name,
-                PackageRepositoryPath = createPackage.PackageRepositoryPath,
-                PackageRepositoryWorkingPath = createPackage.PackageRepositoryWorkingPath,
-                Path = createPackage.Path,
+                PackageRepositoryPath = new DirectoryInfo(createPackage.PackageRepositoryPath).FullName,
+                PackageRepositoryWorkingPath = new DirectoryInfo(createPackage.PackageRepositoryWorkingPath).FullName,
+                Path = new DirectoryInfo(createPackage.Path).FullName,
                 RawTokens = BuildRawTokenDictionaryFrom(createPackage.Tokens),
                 Version = createPackage.Version,
             };

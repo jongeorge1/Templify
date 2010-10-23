@@ -2,6 +2,7 @@
 {
     #region Using Directives
 
+    using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
     using System.Text.RegularExpressions;
@@ -18,14 +19,13 @@
     [Export(typeof(IPackageTokeniser))]
     public class PackageTokeniser : IPackageTokeniser
     {
-        #region Fields
-
         private readonly IBinaryFileFilter binaryFileFilter;
-        private readonly IFileContentProcessor fileContentProcessor;
-        private readonly IProgressNotifier progressNotifier;
-        private readonly IRenameFileProcessor renameFileProcessor;
 
-        #endregion
+        private readonly IFileContentProcessor fileContentProcessor;
+
+        private readonly IProgressNotifier progressNotifier;
+
+        private readonly IRenameFileProcessor renameFileProcessor;
 
         [ImportingConstructor]
         public PackageTokeniser(
@@ -48,27 +48,68 @@
             return package;
         }
 
+        private static string RebaseToTemplatePath(Package package, string tokenisedName)
+        {
+            return tokenisedName.Replace(package.ClonedPath, package.TemplatePath);
+        }
+
         private static string Replace(Dictionary<string, string> tokens, string value)
         {
-            string result = value;
+            var result = value;
 
             foreach (var token in tokens)
             {
                 result = Regex.Replace(result, token.Key, match => token.Value, RegexOptions.IgnoreCase);
             }
-            
+
             return result;
+        }
+
+        private static string ReplaceInPath(Dictionary<string, string> tokens, string path, string basePath)
+        {
+            // If the path doesn't start with basePath, then something is wrong:
+            if (!path.StartsWith(basePath, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new Exception("Invalid path/basePath combination.");
+            }
+
+            var relativePath = path.Remove(0, basePath.Length);
+
+            var tokenisedRelativePath = Replace(tokens, relativePath);
+
+            var fullTokenisedPath = basePath + tokenisedRelativePath;
+
+            return fullTokenisedPath;
+        }
+
+        private void TokeniseDirectoriesAndFiles(Package package, Dictionary<string, string> tokens)
+        {
+            var progress = 0;
+            var fileCount = package.Manifest.Files.Count;
+
+            Parallel.ForEach(
+                package.Manifest.Files, 
+                manifestFile =>
+                    {
+                        var tokenisedName = ReplaceInPath(tokens, manifestFile.File, package.ClonedPath);
+                        tokenisedName = RebaseToTemplatePath(package, tokenisedName);
+                        this.renameFileProcessor.Process(manifestFile.File, tokenisedName);
+                        manifestFile.File = tokenisedName;
+                        this.progressNotifier.UpdateProgress(
+                            ProgressStage.TokenisePackageStructure, fileCount, progress);
+                        progress++;
+                    });
         }
 
         private void TokeniseFileContent(Package package, Dictionary<string, string> tokens)
         {
-            int progress = 0;
-            int fileCount = package.Manifest.Files.Count;
+            var progress = 0;
+            var fileCount = package.Manifest.Files.Count;
 
             var processableFiles = this.binaryFileFilter.Filter(package.Manifest.Files);
 
             Parallel.ForEach(
-                processableFiles,
+                processableFiles, 
                 manifestFile =>
                     {
                         var contents = this.fileContentProcessor.ReadContents(manifestFile.File);
@@ -80,29 +121,6 @@
 
                         progress++;
                     });
-        }
-
-        private void TokeniseDirectoriesAndFiles(Package package, Dictionary<string, string> tokens)
-        {
-            int progress = 0;
-            int fileCount = package.Manifest.Files.Count;
-
-            Parallel.ForEach(
-                package.Manifest.Files,
-                manifestFile =>
-                    {
-                        var tokenisedName = Replace(tokens, manifestFile.File);
-                        tokenisedName = this.RebaseToTemplatePath(package, tokenisedName);
-                        this.renameFileProcessor.Process(manifestFile.File, tokenisedName);
-                        manifestFile.File = tokenisedName;
-                        this.progressNotifier.UpdateProgress(ProgressStage.TokenisePackageStructure, fileCount, progress);
-                        progress++;
-                    });
-        }
-
-        private string RebaseToTemplatePath(Package package, string tokenisedName)
-        {
-            return tokenisedName.Replace(package.ClonedPath, package.TemplatePath);
         }
     }
 }

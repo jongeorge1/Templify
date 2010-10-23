@@ -30,7 +30,7 @@
             this.progressNotifier = progressNotifier;
         }
 
-        public void Build(Package package, string path, string packageRepositoryPath, string packageRepositoryWorkingPath)
+        public void Build(Package package, string packageRepositoryPath, string packageRepositoryWorkingPath)
         {
             var archiveName = package.Manifest.Name.ToLowerInvariant().Replace(" ", "-") + "-v" + package.Manifest.Version;
             var archive = Path.Combine(packageRepositoryPath, archiveName) + FileTypes.Package;
